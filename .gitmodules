@@ -1,0 +1,7 @@
+[submodule "3rdparty/keystone"]
+	path = 3rdparty/keystone
+	url = git@github.com:Wing-summer/keystone.git
+    branch = release
+[submodule "3rdparty/capstone"]
+	path = 3rdparty/capstone
+	url = git@github.com:capstone-engine/capstone.git
