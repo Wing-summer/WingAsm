@@ -17,7 +17,9 @@
 
 #include "winghexasm.h"
 
-WingHexAsm::WingHexAsm() : WingHex::IWingPlugin() {}
+WingHexAsm::WingHexAsm() : WingHex::IWingPlugin() {
+    _pixicon = QPixmap(":/WingHexAsm/images/icon.png");
+}
 
 WingHexAsm::~WingHexAsm() {}
 
@@ -35,6 +37,10 @@ void WingHexAsm::unload(std::unique_ptr<QSettings> &set) {
 }
 
 const QString WingHexAsm::pluginName() const { return tr("WingHexAsm"); }
+
+QIcon WingHexAsm::pluginIcon() const {
+    return QIcon(":/WingHexAsm/images/icon.png");
+}
 
 const QString WingHexAsm::pluginAuthor() const { return WingHex::WINGSUMMER; }
 
@@ -66,7 +72,7 @@ void WingHexAsm::initDockWidgets() {
     info.area = Qt::BottomDockWidgetArea;
     info.widget = win;
     connect(win, &AsmWindow::onProcessClicked, this, &WingHexAsm::on_asm);
-
+    _asmWin = win;
     _dwinfos.append(info);
 
     win = new AsmWindow(false, isDark);
@@ -75,9 +81,49 @@ void WingHexAsm::initDockWidgets() {
     info.area = Qt::BottomDockWidgetArea;
     info.widget = win;
     connect(win, &AsmWindow::onProcessClicked, this, &WingHexAsm::on_disasm);
+    _disasmWin = win;
     _dwinfos.append(info);
 }
 
-void WingHexAsm::on_asm() {}
+void WingHexAsm::on_asm() {
+    auto txt = _asmWin->editorText();
 
-void WingHexAsm::on_disasm() {}
+    auto arch = _asmWin->currentArch();
+    auto fmt = _asmWin->currentAsmFormat();
+    WingEngine::ErrorKSEngine err;
+
+    auto buffer =
+        WingEngine::doAsm(txt.toUtf8(), WingEngine::KSArch(arch), fmt, err);
+    if (err == WingEngine::ErrorKSEngine::ERR_OK) {
+
+    } else {
+        auto e = QMetaEnum::fromType<WingEngine::ErrorKSEngine>();
+        auto errCode = e.valueToKey(int(err));
+        auto errStr = WingEngine::getErrorString(err);
+    }
+}
+
+void WingHexAsm::on_disasm() {
+    auto selCount = emit reader.selectionCount();
+    if (selCount != 1) {
+        emit toast(_pixicon, tr(""));
+        return;
+    }
+
+    auto arch = _disasmWin->currentArch();
+    auto fmt = _disasmWin->currentAsmFormat();
+
+    auto sel = emit reader.selectedBytes(0);
+
+    WingEngine::ErrorCSEngine err;
+    auto txt = WingEngine::doDisasm(sel, WingEngine::CSArch(arch), fmt, err);
+    if (err == WingEngine::ErrorCSEngine::ERR_OK) {
+        _disasmWin->setEditorText(txt);
+    } else {
+        auto e = QMetaEnum::fromType<WingEngine::ErrorCSEngine>();
+        auto errCode = e.valueToKey(int(err));
+        auto errStr = WingEngine::getErrorString(err);
+
+        emit this->error(errStr);
+    }
+}

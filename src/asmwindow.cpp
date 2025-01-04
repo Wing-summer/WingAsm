@@ -28,21 +28,16 @@ AsmWindow::AsmWindow(bool isAsm, bool isDarkTheme, QWidget *parent)
     ui->setupUi(this);
 
     QMetaEnum e_arch;
-    QMetaEnum e_mode;
 
     if (isAsm) {
-        e_arch = QMetaEnum::fromType<WingEngine::CSArch>();
-        e_mode = QMetaEnum::fromType<WingEngine::CSMode>();
-    } else {
         e_arch = QMetaEnum::fromType<WingEngine::KSArch>();
-        e_mode = QMetaEnum::fromType<WingEngine::KSMode>();
+    } else {
+        e_arch = QMetaEnum::fromType<WingEngine::CSArch>();
     }
 
     for (int i = 0; i < e_arch.keyCount(); ++i) {
         ui->cbArch->addItem(e_arch.key(i), e_arch.value(i));
     }
-
-    // TODO modes
 
     auto e_style = QMetaEnum::fromType<WingEngine::AsmFormat>();
     for (int i = 0; i < e_style.keyCount(); ++i) {
@@ -53,6 +48,8 @@ AsmWindow::AsmWindow(bool isAsm, bool isDarkTheme, QWidget *parent)
         loadStyle(QStringLiteral(":/WingHexAsm/resources/drakula.xml"));
     }
 
+    ui->textEdit->setReadOnly(!isAsm);
+
     connect(ui->pushButton, &QPushButton::clicked, this,
             &AsmWindow::onProcessClicked);
 }
@@ -61,15 +58,18 @@ AsmWindow::~AsmWindow() { delete ui; }
 
 QString AsmWindow::editorText() const { return ui->textEdit->toPlainText(); }
 
+void AsmWindow::setEditorText(const QString &txt) {
+    ui->textEdit->setText(txt);
+}
+
 WingEngine::AsmFormat AsmWindow::currentAsmFormat() const {
     return WingEngine::AsmFormat(ui->cbStyle->currentData().toInt());
 }
 
 int AsmWindow::currentArch() const { return ui->cbArch->currentData().toInt(); }
 
-uint AsmWindow::currentOptions() const {
-    // TODO
-    return 0;
+void AsmWindow::setProcessButtonEnabled(bool enabled) {
+    ui->pushButton->setEnabled(enabled);
 }
 
 void AsmWindow::loadStyle(const QString &path) {

@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/WingHexAsm">
         <file>resources/drakula.xml</file>
+        <file>images/icon.png</file>
     </qresource>
 </RCC>
