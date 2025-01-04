@@ -19,8 +19,8 @@
 
 #include <QStringList>
 
-QString WingEngine::doAsm(const QByteArray &code, KSArch arch, KSModes mode,
-                          AsmFormat format, ErrorKSEngine &errcode) {
+QString WingEngine::doAsm(const QByteArray &code, KSArch arch, AsmFormat format,
+                          ErrorKSEngine &errcode) {
     if (code.isEmpty()) {
         errcode = ErrorKSEngine::ERR_OK;
         return {};
@@ -31,7 +31,7 @@ QString WingEngine::doAsm(const QByteArray &code, KSArch arch, KSModes mode,
     unsigned char *encode;
     size_t size;
 
-    ks_err err = ks_open(ks_arch(arch), decltype(mode)::Int(mode), &ks);
+    ks_err err = ks_open(ksArch(arch), ksArch2ksMode(arch), &ks);
     if (err != KS_ERR_OK) {
         errcode = ErrorKSEngine(err);
         return {};
@@ -46,10 +46,11 @@ QString WingEngine::doAsm(const QByteArray &code, KSArch arch, KSModes mode,
     ks_free(encode);
     ks_close(ks);
 
+    errcode = ErrorKSEngine::ERR_OK;
     return QString::fromLatin1(reinterpret_cast<char *>(encode), size);
 }
 
-QString WingEngine::doDisasm(const QByteArray &code, CSArch arch, CSModes mode,
+QString WingEngine::doDisasm(const QByteArray &code, CSArch arch,
                              AsmFormat format, ErrorCSEngine &errcode) {
     if (code.isEmpty()) {
         errcode = ErrorCSEngine::ERR_OK;
@@ -59,8 +60,7 @@ QString WingEngine::doDisasm(const QByteArray &code, CSArch arch, CSModes mode,
     csh handle;
     QStringList asms;
 
-    cs_err err =
-        cs_open(cs_arch(arch), cs_mode(decltype(mode)::Int(mode)), &handle);
+    cs_err err = cs_open(csArch(arch), csArch2csMode(arch), &handle);
 
     if (err != CS_ERR_OK) {
         errcode = ErrorCSEngine(err);
@@ -79,8 +79,9 @@ QString WingEngine::doDisasm(const QByteArray &code, CSArch arch, CSModes mode,
     if (count > 0) {
         size_t j;
         for (j = 0; j < count; j++) {
-            asms << QStringLiteral("%1 %2;").arg(QString(insn[j].mnemonic),
-                                                 QString(insn[j].op_str));
+            asms << (QStringLiteral("%1 %2;").arg(QString(insn[j].mnemonic),
+                                                  QString(insn[j].op_str)))
+                        .trimmed();
         }
     } else {
         errcode = ErrorCSEngine(cs_errno(handle));
@@ -89,52 +90,203 @@ QString WingEngine::doDisasm(const QByteArray &code, CSArch arch, CSModes mode,
     cs_free(insn, count);
     cs_close(&handle);
 
+    errcode = ErrorCSEngine::ERR_OK;
     return asms.join('\n');
 }
 
-QList<WingEngine::KSMode> WingEngine::getAvalibleModes(KSArch arch) {
+ks_arch WingEngine::ksArch(KSArch arch) {
     switch (arch) {
-    case KSArch::ARM:
-    case KSArch::ARM64:
-    case KSArch::MIPS:
-    case KSArch::X86:
-    case KSArch::PPC:
-    case KSArch::SPARC:
-    case KSArch::SYSTEMZ:
+    case KSArch::ARM_V8_EB:
+    case KSArch::THUMB_V8_EB:
+    case KSArch::ARM_V7_EB:
+    case KSArch::ARM_V8:
+    case KSArch::THUMB_V8:
+    case KSArch::ARM_V7:
+    case KSArch::THUMB_V7:
+        return KS_ARCH_ARM;
+    case KSArch::AARCH64:
+        return KS_ARCH_ARM64;
     case KSArch::HEXAGON:
-    case KSArch::EVM:
-        break;
+        return KS_ARCH_HEXAGON;
+    case KSArch::S390X:
+        return KS_ARCH_SYSTEMZ;
+    case KSArch::SPARC64:
+    case KSArch::SPARC:
+    case KSArch::SPARC_EL:
+    case KSArch::SPARC64_V9:
+    case KSArch::SPARC_V9:
+    case KSArch::SPARC_EL_V9:
+        return KS_ARCH_SPARC;
+    case KSArch::MIPS:
+    case KSArch::MIPS64:
+    case KSArch::MIPS_EL:
+    case KSArch::MIPS64_EL:
+        return KS_ARCH_MIPS;
+    case KSArch::POWER_PC32:
+    case KSArch::POWER_PC64:
+    case KSArch::POWER_PC32_EL:
+    case KSArch::POWER_PC64_EL:
+        return KS_ARCH_PPC;
+    case KSArch::I386:
+    case KSArch::X86:
+    case KSArch::X86_64:
+        return KS_ARCH_X86;
     }
-    return {};
+    return KS_ARCH_MAX;
 }
 
-QList<WingEngine::CSMode> WingEngine::getAvalibleModes(CSArch arch) {
+cs_arch WingEngine::csArch(CSArch arch) {
     switch (arch) {
-    case CSArch::ARM:
+    case CSArch::ARM_V8_EB:
+    case CSArch::THUMB_V8_EB:
+    case CSArch::ARM_V7_EB:
+    case CSArch::ARM_V8:
+    case CSArch::THUMB_V8:
+    case CSArch::ARM_V7:
+    case CSArch::THUMB_V7:
+        return CS_ARCH_ARM;
     case CSArch::AARCH64:
-    case CSArch::SYSTEMZ:
+        return CS_ARCH_AARCH64;
+    case CSArch::S390X:
+        return CS_ARCH_SYSTEMZ;
     case CSArch::MIPS:
+    case CSArch::MIPS64:
+    case CSArch::MIPS_EL:
+    case CSArch::MIPS64_EL:
+        return CS_ARCH_MIPS;
+    case CSArch::POWER_PC64:
+    case CSArch::POWER_PC64_EL:
+        return CS_ARCH_PPC;
+    case CSArch::I386:
     case CSArch::X86:
-    case CSArch::PPC:
-    case CSArch::SPARC:
-    case CSArch::XCORE:
-    case CSArch::M68K:
-    case CSArch::TMS320C64X:
-    case CSArch::M680X:
-    case CSArch::EVM:
-    case CSArch::MOS65XX:
-    case CSArch::WASM:
-    case CSArch::BPF:
-    case CSArch::RISCV:
-    case CSArch::SH:
-    case CSArch::TRICORE:
-    case CSArch::ALPHA:
-    case CSArch::HPPA:
-    case CSArch::LOONGARCH:
-    case CSArch::XTENSA:
-        break;
+    case CSArch::X86_64:
+        return CS_ARCH_X86;
+    case CSArch::RISCV32:
+    case CSArch::RISCV64:
+        return CS_ARCH_RISCV;
+    case CSArch::LOONG32:
+    case CSArch::LOONG64:
+        return CS_ARCH_LOONGARCH;
     }
-    return {};
+    return CS_ARCH_MAX;
+}
+
+ks_mode WingEngine::ksArch2ksMode(KSArch arch) {
+    switch (arch) {
+    case KSArch::ARM_V8_EB:
+        return ks_mode(KS_MODE_BIG_ENDIAN | KS_MODE_V8 | KS_MODE_ARM);
+    case KSArch::THUMB_V8_EB:
+        return ks_mode(KS_MODE_BIG_ENDIAN | KS_MODE_V8 | KS_MODE_THUMB);
+    case KSArch::ARM_V7_EB:
+        return ks_mode(KS_MODE_BIG_ENDIAN | KS_MODE_ARM);
+    case KSArch::ARM_V8:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_V8 | KS_MODE_ARM);
+    case KSArch::THUMB_V8:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_V8 | KS_MODE_THUMB);
+    case KSArch::ARM_V7:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_ARM);
+    case KSArch::THUMB_V7:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_THUMB);
+    case KSArch::AARCH64:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN);
+    case KSArch::HEXAGON:
+        return ks_mode(KS_MODE_BIG_ENDIAN);
+    case KSArch::S390X:
+        return ks_mode(KS_MODE_BIG_ENDIAN);
+    case KSArch::SPARC64:
+        return ks_mode(KS_MODE_BIG_ENDIAN | KS_MODE_SPARC64);
+    case KSArch::SPARC:
+        return ks_mode(KS_MODE_BIG_ENDIAN | KS_MODE_SPARC32);
+    case KSArch::SPARC_EL:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_SPARC32);
+    case KSArch::SPARC64_V9:
+        return ks_mode(KS_MODE_BIG_ENDIAN | KS_MODE_SPARC64 | KS_MODE_V9);
+    case KSArch::SPARC_V9:
+        return ks_mode(KS_MODE_BIG_ENDIAN | KS_MODE_SPARC32 | KS_MODE_V9);
+    case KSArch::SPARC_EL_V9:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_SPARC32 | KS_MODE_V9);
+    case KSArch::MIPS:
+        return ks_mode(KS_MODE_BIG_ENDIAN | KS_MODE_MIPS32);
+    case KSArch::MIPS64:
+        return ks_mode(KS_MODE_BIG_ENDIAN | KS_MODE_MIPS64);
+    case KSArch::MIPS_EL:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_MIPS32);
+    case KSArch::MIPS64_EL:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_MIPS64);
+    case KSArch::POWER_PC32:
+        return ks_mode(KS_MODE_BIG_ENDIAN | KS_MODE_PPC32);
+    case KSArch::POWER_PC64:
+        return ks_mode(KS_MODE_BIG_ENDIAN | KS_MODE_PPC64);
+    case KSArch::POWER_PC32_EL:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_PPC32);
+    case KSArch::POWER_PC64_EL:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_PPC64);
+    case KSArch::I386:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_16);
+    case KSArch::X86:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_32);
+    case KSArch::X86_64:
+        return ks_mode(KS_MODE_LITTLE_ENDIAN | KS_MODE_64);
+    }
+    return ks_mode(0);
+}
+
+cs_mode WingEngine::csArch2csMode(CSArch arch) {
+    switch (arch) {
+    case CSArch::ARM_V8_EB:
+        return cs_mode(CS_MODE_BIG_ENDIAN | CS_MODE_V8 | CS_MODE_ARM);
+    case CSArch::THUMB_V8_EB:
+        return cs_mode(CS_MODE_BIG_ENDIAN | CS_MODE_V8 | CS_MODE_THUMB);
+    case CSArch::ARM_V7_EB:
+        return cs_mode(CS_MODE_BIG_ENDIAN | CS_MODE_ARM);
+    case CSArch::ARM_V8:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_V8 | CS_MODE_ARM);
+    case CSArch::THUMB_V8:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_V8 | CS_MODE_THUMB);
+    case CSArch::ARM_V7:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_ARM);
+    case CSArch::THUMB_V7:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_THUMB);
+    case CSArch::AARCH64:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN);
+    case CSArch::S390X:
+        return cs_mode(CS_MODE_BIG_ENDIAN);
+    case CSArch::MIPS:
+        return cs_mode(CS_MODE_BIG_ENDIAN | CS_MODE_MIPS32);
+    case CSArch::MIPS64:
+        return cs_mode(CS_MODE_BIG_ENDIAN | CS_MODE_MIPS64);
+    case CSArch::MIPS_EL:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_MIPS32);
+    case CSArch::MIPS64_EL:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_MIPS64);
+    case CSArch::POWER_PC64:
+        return cs_mode(CS_MODE_BIG_ENDIAN | CS_MODE_64);
+    case CSArch::POWER_PC64_EL:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_64);
+    case CSArch::I386:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_16);
+    case CSArch::X86:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_32);
+    case CSArch::X86_64:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_64);
+    case CSArch::RISCV32:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_RISCV32);
+    case CSArch::RISCV64:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_RISCV64);
+    case CSArch::LOONG32:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_LOONGARCH32);
+    case CSArch::LOONG64:
+        return cs_mode(CS_MODE_LITTLE_ENDIAN | CS_MODE_LOONGARCH64);
+    }
+    return cs_mode(0);
+}
+
+const char *WingEngine::getErrorString(ErrorKSEngine error) {
+    return ks_strerror(ks_err(error));
+}
+
+const char *WingEngine::getErrorString(ErrorCSEngine error) {
+    return cs_strerror(cs_err(error));
 }
 
 ks_opt_value WingEngine::asmFmt2KsOptFmt(AsmFormat fmt) {

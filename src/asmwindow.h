@@ -36,11 +36,13 @@ public:
 public:
     QString editorText() const;
 
+    void setEditorText(const QString &txt);
+
     WingEngine::AsmFormat currentAsmFormat() const;
 
     int currentArch() const;
 
-    uint currentOptions() const;
+    void setProcessButtonEnabled(bool enabled);
 
 signals:
     void onProcessClicked();
