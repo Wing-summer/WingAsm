@@ -2,12 +2,8 @@
     "Id" : "winghexasm",
     "Name" : "WingHexAsm",
     "Version" : "0.0.1",
-    "CompatVersion" : "0.0.1",
     "Vendor" : "WingCloudStudio",
-    "VendorId" : "wingcloudstudio",
-    "Copyright" : "(C) WingCloudStudio",
+    "Author" : "wingsummer",
     "License" : "AGPL-v3.0",
-    "Description" : "Assembler/Disassembler plugin for WingHexExplorer2",
-    "Url" : "https://github.com/Wing-summer/WingAsm",
-    "DocumentationUrl" : ""
+    "Url" : "https://github.com/Wing-summer/WingAsm"
 }

@@ -42,10 +42,6 @@ QIcon WingHexAsm::pluginIcon() const {
     return QIcon(":/WingHexAsm/images/icon.png");
 }
 
-const QString WingHexAsm::pluginAuthor() const { return WingHex::WINGSUMMER; }
-
-uint WingHexAsm::pluginVersion() const { return 1; }
-
 const QString WingHexAsm::pluginComment() const {
     return tr("Assembler/Disassembler plugin for WingHexExplorer2");
 }
