@@ -38,8 +38,6 @@ public:
     virtual void unload(std::unique_ptr<QSettings> &set) override;
     virtual const QString pluginName() const override;
     virtual QIcon pluginIcon() const override;
-    virtual const QString pluginAuthor() const override;
-    virtual uint pluginVersion() const override;
     virtual const QString pluginComment() const override;
 
     // IWingPlugin interface
