@@ -19,8 +19,8 @@
 
 #include <QStringList>
 
-QString WingEngine::doAsm(const QByteArray &code, KSArch arch, AsmFormat format,
-                          ErrorKSEngine &errcode) {
+QByteArray WingEngine::doAsm(const QByteArray &code, KSArch arch,
+                             AsmFormat format, ErrorKSEngine &errcode) {
     if (code.isEmpty()) {
         errcode = ErrorKSEngine::ERR_OK;
         return {};
@@ -47,7 +47,7 @@ QString WingEngine::doAsm(const QByteArray &code, KSArch arch, AsmFormat format,
     ks_close(ks);
 
     errcode = ErrorKSEngine::ERR_OK;
-    return QString::fromLatin1(reinterpret_cast<char *>(encode), size);
+    return QByteArray(reinterpret_cast<char *>(encode), size);
 }
 
 QString WingEngine::doDisasm(const QByteArray &code, CSArch arch,

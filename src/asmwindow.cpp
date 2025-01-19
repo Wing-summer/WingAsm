@@ -27,8 +27,6 @@ AsmWindow::AsmWindow(bool isAsm, bool isDarkTheme, QWidget *parent)
     : QWidget(parent), ui(new Ui::AsmWindow) {
     ui->setupUi(this);
 
-    QMetaEnum e_arch;
-
     if (isAsm) {
         e_arch = QMetaEnum::fromType<WingEngine::KSArch>();
     } else {
@@ -66,7 +64,25 @@ WingEngine::AsmFormat AsmWindow::currentAsmFormat() const {
     return WingEngine::AsmFormat(ui->cbStyle->currentData().toInt());
 }
 
+void AsmWindow::setCurrentAsmFormat(WingEngine::AsmFormat fmt) {
+    for (int i = 0; i < ui->cbStyle->count(); ++i) {
+        if (ui->cbStyle->itemData(i).toInt() == int(fmt)) {
+            ui->cbStyle->setCurrentIndex(i);
+            break;
+        }
+    }
+}
+
 int AsmWindow::currentArch() const { return ui->cbArch->currentData().toInt(); }
+
+void AsmWindow::setCurrentArch(int arch) const {
+    for (int i = 0; i < ui->cbArch->count(); ++i) {
+        if (ui->cbArch->itemData(i).toInt() == arch) {
+            ui->cbArch->setCurrentIndex(i);
+            break;
+        }
+    }
+}
 
 void AsmWindow::setProcessButtonEnabled(bool enabled) {
     ui->pushButton->setEnabled(enabled);

@@ -20,6 +20,7 @@
 
 #include "wingengine.h"
 
+#include <QMetaEnum>
 #include <QWidget>
 
 namespace Ui {
@@ -40,7 +41,11 @@ public:
 
     WingEngine::AsmFormat currentAsmFormat() const;
 
+    void setCurrentAsmFormat(WingEngine::AsmFormat fmt);
+
     int currentArch() const;
+
+    void setCurrentArch(int arch) const;
 
     void setProcessButtonEnabled(bool enabled);
 
@@ -52,6 +57,8 @@ private:
 
 private:
     Ui::AsmWindow *ui;
+
+    QMetaEnum e_arch;
 };
 
 #endif // ASMWINDOW_H
