@@ -17,6 +17,11 @@
 
 #include "winghexasm.h"
 
+Q_GLOBAL_STATIC_WITH_ARGS(QString, ASM_ASM_FMT, ("asm.asmfmt"))
+Q_GLOBAL_STATIC_WITH_ARGS(QString, ASM_ASM_ARCH, ("asm.asmarch"))
+Q_GLOBAL_STATIC_WITH_ARGS(QString, DISASM_ASM_FMT, ("disasm.asmfmt"))
+Q_GLOBAL_STATIC_WITH_ARGS(QString, DISASM_ASM_ARCH, ("disasm.asmfmt"))
+
 WingHexAsm::WingHexAsm() : WingHex::IWingPlugin() {
     _pixicon = QPixmap(":/WingHexAsm/images/icon.png");
 }
@@ -29,11 +34,34 @@ const QString WingHexAsm::signature() const { return WingHex::WINGSUMMER; }
 
 bool WingHexAsm::init(const std::unique_ptr<QSettings> &set) {
     initDockWidgets();
+
+    auto fmt = WingEngine::AsmFormat(
+        set->value(*ASM_ASM_FMT, int(WingEngine::AsmFormat::INTEL)).toInt());
+    auto arch =
+        set->value(*ASM_ASM_ARCH, int(WingEngine::KSArch::X86_64)).toInt();
+    _asmWin->setCurrentAsmFormat(fmt);
+    _asmWin->setCurrentArch(arch);
+
+    fmt = WingEngine::AsmFormat(
+        set->value(*DISASM_ASM_FMT, int(WingEngine::AsmFormat::INTEL)).toInt());
+    arch =
+        set->value(*DISASM_ASM_ARCH, int(WingEngine::CSArch::X86_64)).toInt();
+    _disasmWin->setCurrentAsmFormat(fmt);
+    _disasmWin->setCurrentArch(arch);
+
     return true;
 }
 
 void WingHexAsm::unload(std::unique_ptr<QSettings> &set) {
-    // Your unloading codes here
+    auto fmt = int(_asmWin->currentAsmFormat());
+    auto arch = _asmWin->currentArch();
+    set->setValue(*ASM_ASM_FMT, fmt);
+    set->setValue(*ASM_ASM_ARCH, arch);
+
+    fmt = int(_disasmWin->currentAsmFormat());
+    arch = _disasmWin->currentArch();
+    set->setValue(*DISASM_ASM_FMT, fmt);
+    set->setValue(*DISASM_ASM_ARCH, arch);
 }
 
 const QString WingHexAsm::pluginName() const { return tr("WingHexAsm"); }
@@ -83,6 +111,15 @@ void WingHexAsm::initDockWidgets() {
 
 void WingHexAsm::on_asm() {
     auto txt = _asmWin->editorText();
+    if (txt.isEmpty()) {
+        emit toast(_pixicon, tr("NoInput"));
+        return;
+    }
+
+    if (!emit reader.isCurrentDocEditing()) {
+        emit toast(_pixicon, tr("NoCurrentFileEditing"));
+        return;
+    }
 
     auto arch = _asmWin->currentArch();
     auto fmt = _asmWin->currentAsmFormat();
@@ -91,18 +128,40 @@ void WingHexAsm::on_asm() {
     auto buffer =
         WingEngine::doAsm(txt.toUtf8(), WingEngine::KSArch(arch), fmt, err);
     if (err == WingEngine::ErrorKSEngine::ERR_OK) {
-
+        auto isInsertion = emit reader.isInsertionMode();
+        auto pos = emit reader.currentOffset();
+        if (isInsertion) {
+            auto ret = emit controller.insertBytes(pos, buffer);
+            if (!ret) {
+                emit toast(_pixicon, tr("AsmWriteFailed"));
+            }
+        } else {
+            auto ret = emit controller.writeBytes(pos, buffer);
+            if (!ret) {
+                emit toast(_pixicon, tr("AsmWriteFailed"));
+            }
+        }
     } else {
         auto e = QMetaEnum::fromType<WingEngine::ErrorKSEngine>();
         auto errCode = e.valueToKey(int(err));
         auto errStr = WingEngine::getErrorString(err);
+
+        emit toast(_pixicon, tr("AsmErrorSeeLog"));
+        emit this->error(errStr);
     }
 }
 
 void WingHexAsm::on_disasm() {
+    _disasmWin->setEditorText({});
+
+    if (!emit reader.isCurrentDocEditing()) {
+        emit toast(_pixicon, tr("NoCurrentFileEditing"));
+        return;
+    }
+
     auto selCount = emit reader.selectionCount();
     if (selCount != 1) {
-        emit toast(_pixicon, tr(""));
+        emit toast(_pixicon, tr("OnlyOneSelSupport"));
         return;
     }
 
@@ -120,6 +179,7 @@ void WingHexAsm::on_disasm() {
         auto errCode = e.valueToKey(int(err));
         auto errStr = WingEngine::getErrorString(err);
 
+        emit toast(_pixicon, tr("DisAsmErrorSeeLog"));
         emit this->error(errStr);
     }
 }

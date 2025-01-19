@@ -58,6 +58,12 @@ set(TS_FILES WingHexAsm_zh_CN.ts)
 
 set(TRANSLATION_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+if(POLICY CMP0063)
+    set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+endif()
+
 add_subdirectory(3rdparty/QCodeEditor)
 add_subdirectory(3rdparty/capstone)
 add_subdirectory(3rdparty/keystone)
@@ -71,6 +77,9 @@ if(MSVC)
         get_filename_component(FUZZ_TARGET ${file} NAME_WE)
         target_compile_options(${FUZZ_TARGET} PRIVATE "/wd4477;")
     endforeach()
+else()
+    target_compile_options(capstone PRIVATE -Wno-unused-private-field
+                                            -Wno-unused-but-set-variable)
 endif()
 
 if(${QT_VERSION_MAJOR} EQUAL 5)
@@ -99,7 +108,9 @@ add_library(
     src/wingengine.cpp
     src/asmwindow.h
     src/asmwindow.cpp
-    src/asmwindow.ui)
+    src/asmwindow.ui
+    src/syntaxconfigparser.h
+    src/syntaxconfigparser.cpp)
 
 set_target_properties(WingHexAsm PROPERTIES SUFFIX ".wingplg")
 
