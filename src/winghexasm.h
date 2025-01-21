@@ -51,6 +51,10 @@ public:
 private:
     void initDockWidgets();
 
+private:
+    WING_SERVICE QByteArray doAsm(const QByteArray &code, int arch, int format);
+    WING_SERVICE QString doDisasm(const QByteArray &code, int arch, int format);
+
 private slots:
     void on_asm();
 

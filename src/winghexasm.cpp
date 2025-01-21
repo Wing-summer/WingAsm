@@ -109,6 +109,18 @@ void WingHexAsm::initDockWidgets() {
     _dwinfos.append(info);
 }
 
+QByteArray WingHexAsm::doAsm(const QByteArray &code, int arch, int format) {
+    WingEngine::ErrorKSEngine err;
+    return WingEngine::doAsm(code, WingEngine::KSArch(arch),
+                             WingEngine::AsmFormat(format), err);
+}
+
+QString WingHexAsm::doDisasm(const QByteArray &code, int arch, int format) {
+    WingEngine::ErrorCSEngine err;
+    return WingEngine::doDisasm(code, WingEngine::CSArch(arch),
+                                WingEngine::AsmFormat(format), err);
+}
+
 void WingHexAsm::on_asm() {
     auto txt = _asmWin->editorText();
     if (txt.isEmpty()) {

@@ -110,7 +110,9 @@ add_library(
     src/asmwindow.cpp
     src/asmwindow.ui
     src/syntaxconfigparser.h
-    src/syntaxconfigparser.cpp)
+    src/syntaxconfigparser.cpp
+    src/asmhighlighter.h
+    src/asmhighlighter.cpp)
 
 set_target_properties(WingHexAsm PROPERTIES SUFFIX ".wingplg")
 
