@@ -20,6 +20,10 @@
 
 #include "wingengine.h"
 
+#include "asmhighlighter.h"
+
+#include <QCompleter>
+#include <QMap>
 #include <QMetaEnum>
 #include <QWidget>
 
@@ -33,6 +37,17 @@ class AsmWindow : public QWidget {
 public:
     explicit AsmWindow(bool isAsm, bool isDarkTheme, QWidget *parent = nullptr);
     virtual ~AsmWindow();
+
+private:
+    enum class HighlightType { None, X86_64, X86_64_ATT, ARM, MIPS, POWERPC };
+
+private:
+    HighlightType getHighlightType(WingEngine::CSArch arch,
+                                   WingEngine::AsmFormat fmt);
+    HighlightType getHighlightType(WingEngine::KSArch arch,
+                                   WingEngine::AsmFormat fmt);
+
+    void initHighliter(HighlightType type, const QString &id);
 
 public:
     QString editorText() const;
@@ -59,6 +74,8 @@ private:
     Ui::AsmWindow *ui;
 
     QMetaEnum e_arch;
+    QMap<HighlightType, AsmHighlighter *> m_highlights;
+    QMap<HighlightType, QCompleter *> m_completer;
 };
 
 #endif // ASMWINDOW_H

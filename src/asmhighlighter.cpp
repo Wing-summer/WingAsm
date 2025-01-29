@@ -1,8 +1,21 @@
 #include "asmhighlighter.h"
 #include "QSyntaxStyle.hpp"
+#include "syntaxconfigparser.h"
 
-AsmHighlighter::AsmHighlighter(QTextDocument *document)
-    : QStyleSyntaxHighlighter(document) {
+AsmHighlighter::AsmHighlighter(const QString &id, QObject *parent)
+    : QStyleSyntaxHighlighter(parent) {
+    // Keywords
+    SyntaxConfigParser parser(QStringLiteral(":/WingHexAsm/resources/") + id +
+                              QStringLiteral(".txt"));
+    m_keyWords = parser.parse();
+
+    for (auto &kw : m_keyWords) {
+        m_highlightRules.append(
+            {QRegularExpression(QString(R"(\b%1\b)").arg(kw),
+                                QRegularExpression::CaseInsensitiveOption),
+             "Keyword"});
+    }
+
     // Numbers
     m_highlightRules.append(
         {QRegularExpression(
@@ -11,6 +24,9 @@ AsmHighlighter::AsmHighlighter(QTextDocument *document)
 
     // Strings
     m_highlightRules.append({QRegularExpression(R"("[^\n"]*")"), "String"});
+
+    // Single line
+    m_highlightRules.append({QRegularExpression(R"(;[^\n]*)"), "Comment"});
 }
 
 void AsmHighlighter::highlightBlock(const QString &text) {
@@ -19,9 +35,10 @@ void AsmHighlighter::highlightBlock(const QString &text) {
 
         while (matchIterator.hasNext()) {
             auto match = matchIterator.next();
-
             setFormat(match.capturedStart(), match.capturedLength(),
                       syntaxStyle()->getFormat(rule.formatName));
         }
     }
 }
+
+QStringList AsmHighlighter::keyWords() const { return m_keyWords; }

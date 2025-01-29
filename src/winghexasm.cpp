@@ -17,6 +17,8 @@
 
 #include "winghexasm.h"
 
+#include <QApplication>
+
 Q_GLOBAL_STATIC_WITH_ARGS(QString, ASM_ASM_FMT, ("asm.asmfmt"))
 Q_GLOBAL_STATIC_WITH_ARGS(QString, ASM_ASM_ARCH, ("asm.asmarch"))
 Q_GLOBAL_STATIC_WITH_ARGS(QString, DISASM_ASM_FMT, ("disasm.asmfmt"))
@@ -24,6 +26,64 @@ Q_GLOBAL_STATIC_WITH_ARGS(QString, DISASM_ASM_ARCH, ("disasm.asmfmt"))
 
 WingHexAsm::WingHexAsm() : WingHex::IWingPlugin() {
     _pixicon = QPixmap(":/WingHexAsm/images/icon.png");
+
+    // enums
+    {
+        QList<QPair<QString, int>> values;
+        auto e = QMetaEnum::fromType<WingEngine::KSArch>();
+        for (int i = 0; i < e.keyCount(); ++i) {
+            values.append(qMakePair(e.key(i), e.value(i)));
+        }
+        _scriptEnums.insert(QStringLiteral("AsmArch"), values);
+    }
+
+    {
+        QList<QPair<QString, int>> values;
+        auto e = QMetaEnum::fromType<WingEngine::CSArch>();
+        for (int i = 0; i < e.keyCount(); ++i) {
+            values.append(qMakePair(e.key(i), e.value(i)));
+        }
+        _scriptEnums.insert(QStringLiteral("DisasmArch"), values);
+    }
+
+    {
+        QList<QPair<QString, int>> values;
+        auto e = QMetaEnum::fromType<WingEngine::AsmFormat>();
+        for (int i = 0; i < e.keyCount(); ++i) {
+            values.append(qMakePair(e.key(i), e.value(i)));
+        }
+        _scriptEnums.insert(QStringLiteral("AsmFormat"), values);
+    }
+
+    // functions
+    {
+        WingHex::IWingPlugin::ScriptFnInfo info;
+        info.fn =
+            std::bind(QOverload<const QVariantList &>::of(&WingHexAsm::doAsm),
+                      this, std::placeholders::_1);
+        info.ret = MetaType(MetaType::Array | MetaType::Byte);
+
+        info.params.append(qMakePair(MetaType::String, QStringLiteral("code")));
+        info.params.append(qMakePair(MetaType::Int, QStringLiteral("arch")));
+        info.params.append(qMakePair(MetaType::Int, QStringLiteral("format")));
+
+        _scriptInfo.insert(QStringLiteral("doAsm"), info);
+    }
+
+    {
+        WingHex::IWingPlugin::ScriptFnInfo info;
+        info.fn = std::bind(
+            QOverload<const QVariantList &>::of(&WingHexAsm::doDisasm), this,
+            std::placeholders::_1);
+        info.ret = MetaType::String;
+
+        info.params.append(qMakePair(MetaType(MetaType::Array | MetaType::Byte),
+                                     QStringLiteral("code")));
+        info.params.append(qMakePair(MetaType::Int, QStringLiteral("arch")));
+        info.params.append(qMakePair(MetaType::Int, QStringLiteral("format")));
+
+        _scriptInfo.insert(QStringLiteral("doDisasm"), info);
+    }
 }
 
 WingHexAsm::~WingHexAsm() {}
@@ -74,6 +134,10 @@ const QString WingHexAsm::pluginComment() const {
     return tr("Assembler/Disassembler plugin for WingHexExplorer2");
 }
 
+QString WingHexAsm::retranslate(const QString &str) {
+    return QApplication::tr(str.toLatin1());
+}
+
 QList<WingHex::WingDockWidgetInfo> WingHexAsm::registeredDockWidgets() const {
     return _dwinfos;
 }
@@ -82,6 +146,16 @@ QMenu *WingHexAsm::registeredHexContextMenu() const { return nullptr; }
 
 QHash<WingHex::SettingPage *, bool> WingHexAsm::registeredSettingPages() const {
     return _spinfos;
+}
+
+QHash<QString, QList<QPair<QString, int>>>
+WingHexAsm::registeredScriptEnums() const {
+    return _scriptEnums;
+}
+
+QHash<QString, WingHex::IWingPlugin::ScriptFnInfo>
+WingHexAsm::registeredScriptFns() const {
+    return _scriptInfo;
 }
 
 void WingHexAsm::initDockWidgets() {
@@ -109,14 +183,78 @@ void WingHexAsm::initDockWidgets() {
     _dwinfos.append(info);
 }
 
-QByteArray WingHexAsm::doAsm(const QByteArray &code, int arch, int format) {
+QPair<QByteArray, int> WingHexAsm::doAsm(const QString &code, int arch,
+                                         int format) {
     WingEngine::ErrorKSEngine err;
+    return qMakePair(WingEngine::doAsm(code, WingEngine::KSArch(arch),
+                                       WingEngine::AsmFormat(format), err),
+                     int(err));
+}
+
+QPair<QString, int> WingHexAsm::doDisasm(const QByteArray &code, int arch,
+                                         int format) {
+    WingEngine::ErrorCSEngine err;
+    return qMakePair(WingEngine::doDisasm(code, WingEngine::CSArch(arch),
+                                          WingEngine::AsmFormat(format), err),
+                     int(err));
+}
+
+QVariant WingHexAsm::doAsm(const QVariantList &params) {
+    if (params.size() != 3) {
+        return {};
+    }
+
+    auto var_code = params.at(0);
+    auto var_arch = params.at(1);
+    auto var_fmt = params.at(2);
+
+    if (!var_code.canConvert<QString>()) {
+        return {};
+    }
+
+    if (!var_arch.canConvert<int>()) {
+        return {};
+    }
+
+    if (!var_fmt.canConvert<int>()) {
+        return {};
+    }
+
+    WingEngine::ErrorKSEngine err;
+    auto code = var_code.toString();
+    auto arch = var_arch.toInt();
+    auto format = var_fmt.toInt();
+
     return WingEngine::doAsm(code, WingEngine::KSArch(arch),
                              WingEngine::AsmFormat(format), err);
 }
 
-QString WingHexAsm::doDisasm(const QByteArray &code, int arch, int format) {
+QVariant WingHexAsm::doDisasm(const QVariantList &params) {
+    if (params.size() != 3) {
+        return {};
+    }
+
+    auto var_code = params.at(0);
+    auto var_arch = params.at(1);
+    auto var_fmt = params.at(2);
+
+    if (!var_code.canConvert<QByteArray>()) {
+        return {};
+    }
+
+    if (!var_arch.canConvert<int>()) {
+        return {};
+    }
+
+    if (!var_fmt.canConvert<int>()) {
+        return {};
+    }
+
     WingEngine::ErrorCSEngine err;
+    auto code = var_code.toByteArray();
+    auto arch = var_arch.toInt();
+    auto format = var_fmt.toInt();
+
     return WingEngine::doDisasm(code, WingEngine::CSArch(arch),
                                 WingEngine::AsmFormat(format), err);
 }

@@ -50,9 +50,118 @@ AsmWindow::AsmWindow(bool isAsm, bool isDarkTheme, QWidget *parent)
 
     connect(ui->pushButton, &QPushButton::clicked, this,
             &AsmWindow::onProcessClicked);
+
+    // highliter
+    initHighliter(HighlightType::None, {});
+    initHighliter(HighlightType::X86_64, QStringLiteral("x86_64"));
+    initHighliter(HighlightType::X86_64_ATT, QStringLiteral("x86_64_att"));
+    initHighliter(HighlightType::ARM, QStringLiteral("arm"));
+    initHighliter(HighlightType::MIPS, QStringLiteral("powerpc"));
+    initHighliter(HighlightType::MIPS, QStringLiteral("mips"));
+
+    auto op = [isAsm, this]() {
+        auto fmt = WingEngine::AsmFormat(ui->cbStyle->currentData().toInt());
+        if (isAsm) {
+            auto arch = WingEngine::KSArch(ui->cbArch->currentData().toInt());
+            auto htype = getHighlightType(arch, fmt);
+            auto hler = m_highlights.value(htype);
+            auto co = m_completer.value(htype);
+            ui->textEdit->setHighlighter(hler);
+            ui->textEdit->setCompleter(co);
+        } else {
+            auto arch = WingEngine::CSArch(ui->cbArch->currentData().toInt());
+            auto htype = getHighlightType(arch, fmt);
+            auto hler = m_highlights.value(htype);
+            auto co = m_completer.value(htype);
+            ui->textEdit->setHighlighter(hler);
+            ui->textEdit->setCompleter(co);
+        }
+    };
+
+    connect(ui->cbArch, &QComboBox::currentIndexChanged, this, op);
+    connect(ui->cbStyle, &QComboBox::currentIndexChanged, this, op);
+
+    emit ui->cbArch->currentIndexChanged(ui->cbArch->currentIndex());
 }
 
 AsmWindow::~AsmWindow() { delete ui; }
+
+void AsmWindow::initHighliter(HighlightType type, const QString &id) {
+    if (id.isEmpty()) {
+        m_highlights.insert(type, nullptr);
+        m_completer.insert(type, nullptr);
+    } else {
+        auto hler = new AsmHighlighter(id, this);
+        auto cp = new QCompleter(hler->keyWords(), this);
+        cp->setCaseSensitivity(Qt::CaseInsensitive);
+        m_highlights.insert(type, hler);
+        m_completer.insert(type, cp);
+    }
+}
+
+AsmWindow::HighlightType
+AsmWindow::getHighlightType(WingEngine::KSArch arch,
+                            WingEngine::AsmFormat fmt) {
+    switch (arch) {
+    case WingEngine::KSArch::ARM_V8_EB:
+    case WingEngine::KSArch::THUMB_V8_EB:
+    case WingEngine::KSArch::ARM_V7_EB:
+    case WingEngine::KSArch::ARM_V8:
+    case WingEngine::KSArch::THUMB_V8:
+    case WingEngine::KSArch::ARM_V7:
+    case WingEngine::KSArch::THUMB_V7:
+        return HighlightType::ARM;
+    case WingEngine::KSArch::MIPS:
+    case WingEngine::KSArch::MIPS64:
+    case WingEngine::KSArch::MIPS_EL:
+    case WingEngine::KSArch::MIPS64_EL:
+        return HighlightType::MIPS;
+    case WingEngine::KSArch::POWER_PC32:
+    case WingEngine::KSArch::POWER_PC64:
+    case WingEngine::KSArch::POWER_PC32_EL:
+    case WingEngine::KSArch::POWER_PC64_EL:
+        return HighlightType::MIPS;
+    case WingEngine::KSArch::I386:
+    case WingEngine::KSArch::X86:
+    case WingEngine::KSArch::X86_64:
+        return fmt == WingEngine::AsmFormat::ATT ? HighlightType::X86_64_ATT
+                                                 : HighlightType::X86_64;
+    default:
+        break;
+    }
+    return HighlightType::None;
+}
+
+AsmWindow::HighlightType
+AsmWindow::getHighlightType(WingEngine::CSArch arch,
+                            WingEngine::AsmFormat fmt) {
+    switch (arch) {
+    case WingEngine::CSArch::ARM_V8_EB:
+    case WingEngine::CSArch::THUMB_V8_EB:
+    case WingEngine::CSArch::ARM_V7_EB:
+    case WingEngine::CSArch::ARM_V8:
+    case WingEngine::CSArch::THUMB_V8:
+    case WingEngine::CSArch::ARM_V7:
+    case WingEngine::CSArch::THUMB_V7:
+        return HighlightType::ARM;
+    case WingEngine::CSArch::MIPS:
+    case WingEngine::CSArch::MIPS64:
+    case WingEngine::CSArch::MIPS_EL:
+    case WingEngine::CSArch::MIPS64_EL:
+        return HighlightType::MIPS;
+    case WingEngine::CSArch::POWER_PC64:
+    case WingEngine::CSArch::POWER_PC64_EL:
+        return HighlightType::POWERPC;
+    case WingEngine::CSArch::I386:
+    case WingEngine::CSArch::X86:
+    case WingEngine::CSArch::X86_64:
+        return fmt == WingEngine::AsmFormat::ATT ? HighlightType::X86_64_ATT
+                                                 : HighlightType::X86_64;
+    default:
+        break;
+    }
+    return HighlightType::None;
+}
 
 QString AsmWindow::editorText() const { return ui->textEdit->toPlainText(); }
 

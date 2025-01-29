@@ -168,8 +168,8 @@ public:
     Q_ENUM(AsmFormat)
 
 public:
-    static QByteArray doAsm(const QByteArray &code, KSArch arch, AsmFormat format,
-                         ErrorKSEngine &errcode);
+    static QByteArray doAsm(const QString &code, KSArch arch, AsmFormat format,
+                            ErrorKSEngine &errcode);
     static QString doDisasm(const QByteArray &code, CSArch arch,
                             AsmFormat format, ErrorCSEngine &errcode);
 

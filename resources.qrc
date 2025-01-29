@@ -1,14 +1,11 @@
 <RCC>
     <qresource prefix="/WingHexAsm">
-        <file>resources/drakula.xml</file>
         <file>images/icon.png</file>
-        <file>resources/intel/x86_64.txt</file>
-        <file>resources/intel/arm.txt</file>
-        <file>resources/intel/mips.txt</file>
-        <file>resources/intel/powerpc.txt</file>
-        <file>resources/att/x86_64.txt</file>
-        <file>resources/att/arm.txt</file>
-        <file>resources/att/mips.txt</file>
-        <file>resources/att/powerpc.txt</file>
+        <file>resources/arm.txt</file>
+        <file>resources/drakula.xml</file>
+        <file>resources/mips.txt</file>
+        <file>resources/powerpc.txt</file>
+        <file>resources/x86_64.txt</file>
+        <file>resources/x86_64_att.txt</file>
     </qresource>
 </RCC>

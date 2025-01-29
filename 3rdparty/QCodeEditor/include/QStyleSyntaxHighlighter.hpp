@@ -1,6 +1,7 @@
 #pragma once
 
 // Qt
+#include <QObject>
 #include <QSyntaxHighlighter> // Required for inheritance
 
 class QSyntaxStyle;
@@ -10,7 +11,11 @@ class QSyntaxStyle;
  * syntax style.
  */
 class QStyleSyntaxHighlighter : public QSyntaxHighlighter {
+    Q_OBJECT
+
 public:
+    explicit QStyleSyntaxHighlighter(QObject *parent = nullptr);
+
     /**
      * @brief Constructor.
      * @param document Pointer to text document.

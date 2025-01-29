@@ -19,7 +19,13 @@ QStringList SyntaxConfigParser::parse() {
         if (line.isEmpty() || line.startsWith('#')) {
             continue;
         }
-        ret.append(line);
+
+        auto idx = line.indexOf('#'); // must greater than 0
+        if (idx > 0) {
+            ret.append(line.left(idx));
+        } else {
+            ret.append(line);
+        }
     }
 
     close();

@@ -1,6 +1,9 @@
 // QCodeEditor
 #include "QStyleSyntaxHighlighter.hpp"
 
+QStyleSyntaxHighlighter::QStyleSyntaxHighlighter(QObject *parent)
+    : QSyntaxHighlighter(parent), m_syntaxStyle(nullptr) {}
+
 QStyleSyntaxHighlighter::QStyleSyntaxHighlighter(QTextDocument *document)
     : QSyntaxHighlighter(document), m_syntaxStyle(nullptr) {}
 

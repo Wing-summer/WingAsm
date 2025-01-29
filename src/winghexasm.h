@@ -40,6 +40,8 @@ public:
     virtual QIcon pluginIcon() const override;
     virtual const QString pluginComment() const override;
 
+    virtual QString retranslate(const QString &str) override;
+
     // IWingPlugin interface
 public:
     virtual QList<WingHex::WingDockWidgetInfo>
@@ -48,12 +50,22 @@ public:
     virtual QHash<WingHex::SettingPage *, bool>
     registeredSettingPages() const override;
 
+    virtual QHash<QString, ScriptFnInfo> registeredScriptFns() const override;
+    virtual QHash<QString, QList<QPair<QString, int>>>
+    registeredScriptEnums() const override;
+
 private:
     void initDockWidgets();
 
 private:
-    WING_SERVICE QByteArray doAsm(const QByteArray &code, int arch, int format);
-    WING_SERVICE QString doDisasm(const QByteArray &code, int arch, int format);
+    WING_SERVICE QPair<QByteArray, int> doAsm(const QString &code, int arch,
+                                              int format);
+    WING_SERVICE QPair<QString, int> doDisasm(const QByteArray &code, int arch,
+                                              int format);
+
+private:
+    QVariant doAsm(const QVariantList &params);
+    QVariant doDisasm(const QVariantList &params);
 
 private slots:
     void on_asm();
@@ -63,6 +75,9 @@ private slots:
 private:
     QList<WingHex::WingDockWidgetInfo> _dwinfos;
     QHash<WingHex::SettingPage *, bool> _spinfos;
+
+    QHash<QString, WingHex::IWingPlugin::ScriptFnInfo> _scriptInfo;
+    QHash<QString, QList<QPair<QString, int>>> _scriptEnums;
 
     AsmWindow *_asmWin;
     AsmWindow *_disasmWin;
