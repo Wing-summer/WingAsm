@@ -20,10 +20,14 @@ if(MSVC)
     string(APPEND CMAKE_C_FLAGS " /utf-8")
 endif()
 
-option(TEST_MODE TRUE)
+option(TEST_MODE OFF)
 
 if(NOT EXISTS "${WINGHEX_SDK}")
     message(FATAL_ERROR "Please config the SDK Path - WINGHEX_SDK")
+endif()
+
+if(WIN32)
+    string(REPLACE "\\" "/" WINGHEX_SDK "${WINGHEX_SDK}")
 endif()
 
 set(PLUGIN_INTERFACE_BASE_FOUND FALSE)
