@@ -18,7 +18,7 @@
 #ifndef WINGHEXASM_H
 #define WINGHEXASM_H
 
-#include "iwingplugin.h"
+#include "WingPlugin/iwingplugin.h"
 
 #include "asmwindow.h"
 
@@ -33,7 +33,6 @@ public:
 
 public:
     virtual int sdkVersion() const override;
-    virtual const QString signature() const override;
     virtual bool init(const std::unique_ptr<QSettings> &set) override;
     virtual void unload(std::unique_ptr<QSettings> &set) override;
     virtual const QString pluginName() const override;

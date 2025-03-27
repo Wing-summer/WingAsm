@@ -90,8 +90,6 @@ WingHexAsm::~WingHexAsm() {}
 
 int WingHexAsm::sdkVersion() const { return WingHex::SDKVERSION; }
 
-const QString WingHexAsm::signature() const { return WingHex::WINGSUMMER; }
-
 bool WingHexAsm::init(const std::unique_ptr<QSettings> &set) {
     initDockWidgets();
 
@@ -159,7 +157,7 @@ WingHexAsm::registeredScriptFns() const {
 }
 
 void WingHexAsm::initDockWidgets() {
-    auto theme = emit currentAppTheme();
+    auto theme = currentAppTheme();
     auto isDark = theme == WingHex::AppTheme::Dark;
 
     WingHex::WingDockWidgetInfo info;
@@ -186,17 +184,17 @@ void WingHexAsm::initDockWidgets() {
 QPair<QByteArray, int> WingHexAsm::doAsm(const QString &code, int arch,
                                          int format) {
     WingEngine::ErrorKSEngine err;
-    return qMakePair(WingEngine::doAsm(code, WingEngine::KSArch(arch),
-                                       WingEngine::AsmFormat(format), err),
-                     int(err));
+    auto ret = WingEngine::doAsm(code, WingEngine::KSArch(arch),
+                                 WingEngine::AsmFormat(format), err);
+    return qMakePair(ret, int(err));
 }
 
 QPair<QString, int> WingHexAsm::doDisasm(const QByteArray &code, int arch,
                                          int format) {
     WingEngine::ErrorCSEngine err;
-    return qMakePair(WingEngine::doDisasm(code, WingEngine::CSArch(arch),
-                                          WingEngine::AsmFormat(format), err),
-                     int(err));
+    auto ret = WingEngine::doDisasm(code, WingEngine::CSArch(arch),
+                                    WingEngine::AsmFormat(format), err);
+    return qMakePair(ret, int(err));
 }
 
 QVariant WingHexAsm::doAsm(const QVariantList &params) {
@@ -262,12 +260,12 @@ QVariant WingHexAsm::doDisasm(const QVariantList &params) {
 void WingHexAsm::on_asm() {
     auto txt = _asmWin->editorText();
     if (txt.isEmpty()) {
-        emit toast(_pixicon, tr("NoInput"));
+        toast(_pixicon, tr("NoInput"));
         return;
     }
 
-    if (!emit reader.isCurrentDocEditing()) {
-        emit toast(_pixicon, tr("NoCurrentFileEditing"));
+    if (!isCurrentDocEditing()) {
+        toast(_pixicon, tr("NoCurrentFileEditing"));
         return;
     }
 
@@ -278,58 +276,54 @@ void WingHexAsm::on_asm() {
     auto buffer =
         WingEngine::doAsm(txt.toUtf8(), WingEngine::KSArch(arch), fmt, err);
     if (err == WingEngine::ErrorKSEngine::ERR_OK) {
-        auto isInsertion = emit reader.isInsertionMode();
-        auto pos = emit reader.currentOffset();
+        auto isInsertion = isInsertionMode();
+        auto pos = currentOffset();
         if (isInsertion) {
-            auto ret = emit controller.insertBytes(pos, buffer);
+            auto ret = insertBytes(pos, buffer);
             if (!ret) {
-                emit toast(_pixicon, tr("AsmWriteFailed"));
+                toast(_pixicon, tr("AsmWriteFailed"));
             }
         } else {
-            auto ret = emit controller.writeBytes(pos, buffer);
+            auto ret = writeBytes(pos, buffer);
             if (!ret) {
-                emit toast(_pixicon, tr("AsmWriteFailed"));
+                toast(_pixicon, tr("AsmWriteFailed"));
             }
         }
     } else {
-        auto e = QMetaEnum::fromType<WingEngine::ErrorKSEngine>();
-        auto errCode = e.valueToKey(int(err));
         auto errStr = WingEngine::getErrorString(err);
 
-        emit toast(_pixicon, tr("AsmErrorSeeLog"));
-        emit this->error(errStr);
+        toast(_pixicon, tr("AsmErrorSeeLog"));
+        logError(errStr);
     }
 }
 
 void WingHexAsm::on_disasm() {
     _disasmWin->setEditorText({});
 
-    if (!emit reader.isCurrentDocEditing()) {
-        emit toast(_pixicon, tr("NoCurrentFileEditing"));
+    if (!isCurrentDocEditing()) {
+        toast(_pixicon, tr("NoCurrentFileEditing"));
         return;
     }
 
-    auto selCount = emit reader.selectionCount();
+    auto selCount = selectionCount();
     if (selCount != 1) {
-        emit toast(_pixicon, tr("OnlyOneSelSupport"));
+        toast(_pixicon, tr("OnlyOneSelSupport"));
         return;
     }
 
     auto arch = _disasmWin->currentArch();
     auto fmt = _disasmWin->currentAsmFormat();
 
-    auto sel = emit reader.selectedBytes(0);
+    auto sel = selectedBytes(0);
 
     WingEngine::ErrorCSEngine err;
     auto txt = WingEngine::doDisasm(sel, WingEngine::CSArch(arch), fmt, err);
     if (err == WingEngine::ErrorCSEngine::ERR_OK) {
         _disasmWin->setEditorText(txt);
     } else {
-        auto e = QMetaEnum::fromType<WingEngine::ErrorCSEngine>();
-        auto errCode = e.valueToKey(int(err));
         auto errStr = WingEngine::getErrorString(err);
 
-        emit toast(_pixicon, tr("DisAsmErrorSeeLog"));
-        emit this->error(errStr);
+        toast(_pixicon, tr("DisAsmErrorSeeLog"));
+        logError(errStr);
     }
 }
