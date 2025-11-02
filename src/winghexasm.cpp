@@ -25,70 +25,10 @@ Q_GLOBAL_STATIC_WITH_ARGS(QString, DISASM_ASM_FMT, ("disasm.asmfmt"))
 Q_GLOBAL_STATIC_WITH_ARGS(QString, DISASM_ASM_ARCH, ("disasm.asmfmt"))
 
 WingHexAsm::WingHexAsm() : WingHex::IWingPlugin() {
-    _pixicon = QPixmap(":/WingHexAsm/images/icon.png");
-
-    // enums
-    {
-        QList<QPair<QString, int>> values;
-        auto e = QMetaEnum::fromType<WingEngine::KSArch>();
-        for (int i = 0; i < e.keyCount(); ++i) {
-            values.append(qMakePair(e.key(i), e.value(i)));
-        }
-        _scriptEnums.insert(QStringLiteral("AsmArch"), values);
-    }
-
-    {
-        QList<QPair<QString, int>> values;
-        auto e = QMetaEnum::fromType<WingEngine::CSArch>();
-        for (int i = 0; i < e.keyCount(); ++i) {
-            values.append(qMakePair(e.key(i), e.value(i)));
-        }
-        _scriptEnums.insert(QStringLiteral("DisasmArch"), values);
-    }
-
-    {
-        QList<QPair<QString, int>> values;
-        auto e = QMetaEnum::fromType<WingEngine::AsmFormat>();
-        for (int i = 0; i < e.keyCount(); ++i) {
-            values.append(qMakePair(e.key(i), e.value(i)));
-        }
-        _scriptEnums.insert(QStringLiteral("AsmFormat"), values);
-    }
-
-    // functions
-    {
-        WingHex::IWingPlugin::ScriptFnInfo info;
-        info.fn =
-            std::bind(QOverload<const QVariantList &>::of(&WingHexAsm::doAsm),
-                      this, std::placeholders::_1);
-        info.ret = MetaType(MetaType::Array | MetaType::Byte);
-
-        info.params.append(qMakePair(MetaType::String, QStringLiteral("code")));
-        info.params.append(qMakePair(MetaType::Int, QStringLiteral("arch")));
-        info.params.append(qMakePair(MetaType::Int, QStringLiteral("format")));
-
-        _scriptInfo.insert(QStringLiteral("doAsm"), info);
-    }
-
-    {
-        WingHex::IWingPlugin::ScriptFnInfo info;
-        info.fn = std::bind(
-            QOverload<const QVariantList &>::of(&WingHexAsm::doDisasm), this,
-            std::placeholders::_1);
-        info.ret = MetaType::String;
-
-        info.params.append(qMakePair(MetaType(MetaType::Array | MetaType::Byte),
-                                     QStringLiteral("code")));
-        info.params.append(qMakePair(MetaType::Int, QStringLiteral("arch")));
-        info.params.append(qMakePair(MetaType::Int, QStringLiteral("format")));
-
-        _scriptInfo.insert(QStringLiteral("doDisasm"), info);
-    }
+    _pixicon = QPixmap(QStringLiteral(":/WingHexAsm/images/icon.png"));
 }
 
 WingHexAsm::~WingHexAsm() {}
-
-int WingHexAsm::sdkVersion() const { return WingHex::SDKVERSION; }
 
 bool WingHexAsm::init(const std::unique_ptr<QSettings> &set) {
     initDockWidgets();
@@ -142,18 +82,44 @@ QList<WingHex::WingDockWidgetInfo> WingHexAsm::registeredDockWidgets() const {
 
 QMenu *WingHexAsm::registeredHexContextMenu() const { return nullptr; }
 
-QHash<WingHex::SettingPage *, bool> WingHexAsm::registeredSettingPages() const {
+QList<WingHex::SettingPage *> WingHexAsm::registeredSettingPages() const {
     return _spinfos;
 }
 
-QHash<QString, QList<QPair<QString, int>>>
-WingHexAsm::registeredScriptEnums() const {
-    return _scriptEnums;
+template <typename T>
+void registerMetaEnumType(WingHex::IWingAngel *o, const char *enumName) {
+    static_assert(sizeof(T) == sizeof(int), "sizeof(T) != sizeof(int)");
+    auto e = QMetaEnum::fromType<T>();
+    auto r = o->registerEnum(enumName);
+    Q_ASSERT(r == WingHex::asRetCodes::asSUCCESS);
+
+    for (int i = 0; i < e.keyCount(); ++i) {
+        r = o->registerEnumValue(enumName, e.key(i), e.value(i));
+        Q_ASSERT(r == WingHex::asRetCodes::asSUCCESS);
+    }
 }
 
-QHash<QString, WingHex::IWingPlugin::ScriptFnInfo>
-WingHexAsm::registeredScriptFns() const {
-    return _scriptInfo;
+void WingHexAsm::onRegisterScriptObj(WingHex::IWingAngel *o) {
+    registerMetaEnumType<WingEngine::KSArch>(o, "AsmArch");
+    registerMetaEnumType<WingEngine::CSArch>(o, "DisasmArch");
+    registerMetaEnumType<WingEngine::AsmFormat>(o, "AsmFormat");
+    o->registerGlobalFunction(
+        WingHex::MetaType::Meta_Array | WingHex::MetaType::Meta_Byte,
+        std::bind(QOverload<const QVariantList &>::of(&WingHexAsm::doAsm), this,
+                  std::placeholders::_1),
+        QStringLiteral("doAsm"),
+        {qMakePair(WingHex::MetaType::Meta_String, QStringLiteral("code")),
+         qMakePair(WingHex::MetaType::Meta_Int, QStringLiteral("arch")),
+         qMakePair(WingHex::MetaType::Meta_Int, QStringLiteral("format"))});
+    o->registerGlobalFunction(
+        WingHex::MetaType::Meta_String,
+        std::bind(QOverload<const QVariantList &>::of(&WingHexAsm::doDisasm),
+                  this, std::placeholders::_1),
+        QStringLiteral("doDisasm"),
+        {qMakePair(WingHex::MetaType::Meta_Array | WingHex::MetaType::Meta_Byte,
+                   QStringLiteral("code")),
+         qMakePair(WingHex::MetaType::Meta_Int, QStringLiteral("arch")),
+         qMakePair(WingHex::MetaType::Meta_Int, QStringLiteral("format"))});
 }
 
 void WingHexAsm::initDockWidgets() {
@@ -181,20 +147,32 @@ void WingHexAsm::initDockWidgets() {
     _dwinfos.append(info);
 }
 
-QPair<QByteArray, int> WingHexAsm::doAsm(const QString &code, int arch,
-                                         int format) {
+QByteArray WingHexAsm::doAsm(const WingHex::SenderInfo &sender,
+                             const QString &code, int arch, int format) {
     WingEngine::ErrorKSEngine err;
     auto ret = WingEngine::doAsm(code, WingEngine::KSArch(arch),
                                  WingEngine::AsmFormat(format), err);
-    return qMakePair(ret, int(err));
+    _lastKSErr[sender.puid] = err;
+    return ret;
 }
 
-QPair<QString, int> WingHexAsm::doDisasm(const QByteArray &code, int arch,
-                                         int format) {
+QString WingHexAsm::doDisasm(const WingHex::SenderInfo &sender,
+                             const QByteArray &code, int arch, int format) {
     WingEngine::ErrorCSEngine err;
     auto ret = WingEngine::doDisasm(code, WingEngine::CSArch(arch),
                                     WingEngine::AsmFormat(format), err);
-    return qMakePair(ret, int(err));
+    _lastCSErr[sender.puid] = err;
+    return ret;
+}
+
+int WingHexAsm::getLastAsmError(const WingHex::SenderInfo &sender) {
+    return int(
+        _lastKSErr.value(sender.puid, WingEngine::ErrorKSEngine::ERR_OK));
+}
+
+int WingHexAsm::getLastDisasmError(const WingHex::SenderInfo &sender) {
+    return int(
+        _lastCSErr.value(sender.puid, WingEngine::ErrorCSEngine::ERR_OK));
 }
 
 QVariant WingHexAsm::doAsm(const QVariantList &params) {
@@ -284,9 +262,17 @@ void WingHexAsm::on_asm() {
                 toast(_pixicon, tr("AsmWriteFailed"));
             }
         } else {
-            auto ret = writeBytes(pos, buffer);
-            if (!ret) {
-                toast(_pixicon, tr("AsmWriteFailed"));
+            auto r = isInsertionMode();
+            if (r) {
+                auto ret = insertBytes(pos, buffer);
+                if (!ret) {
+                    toast(_pixicon, tr("AsmWriteFailed"));
+                }
+            } else {
+                auto ret = writeBytes(pos, buffer);
+                if (!ret) {
+                    toast(_pixicon, tr("AsmWriteFailed"));
+                }
             }
         }
     } else {

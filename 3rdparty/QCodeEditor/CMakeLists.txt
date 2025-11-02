@@ -1,8 +1,15 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.10)
 project(QCodeEditor LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Find includes in corresponding build directories
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 set(RESOURCES_FILE resources/qcodeeditor_resources.qrc)
 
@@ -21,32 +28,9 @@ set(SOURCE_FILES
     src/QStyleSyntaxHighlighter.cpp src/QLanguage.cpp
     src/QFramedTextAttribute.cpp)
 
-# Create code for QObjects
-set(CMAKE_AUTOMOC ON)
-
-# Create code from resource files
-set(CMAKE_AUTORCC ON)
-
-# Find includes in corresponding build directories
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-
 add_library(QCodeEditor STATIC ${RESOURCES_FILE} ${SOURCE_FILES}
                                ${INCLUDE_FILES})
 
 target_include_directories(QCodeEditor PUBLIC include)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-    target_compile_options(
-        QCodeEditor
-        PRIVATE -ansi
-                -pedantic
-                -Wall
-                -Wextra
-                -Weffc++
-                -Woverloaded-virtual
-                -Winit-self
-                -Wunreachable-code)
-endif(CMAKE_COMPILER_IS_GNUCXX)
-
-target_link_libraries(QCodeEditor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(QCodeEditor PRIVATE Qt6::Widgets)

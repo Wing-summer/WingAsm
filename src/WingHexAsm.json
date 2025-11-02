@@ -1,8 +1,12 @@
 {
-    "Id" : "WingHexAsm",
-    "Version" : "0.0.1",
-    "Vendor" : "WingCloudStudio",
-    "Author" : "wingsummer",
-    "License" : "AGPL-v3.0",
-    "Url" : "https://github.com/Wing-summer/WingAsm"
+    "Id": "WingHexAsm",
+    "SDK": 19,
+    "Version": "0.1.0",
+    "Vendor": "WingCloudStudio",
+    "Dependencies": [
+
+    ],
+    "Author": "wingsummer",
+    "License": "AGPL-v3.0",
+    "Url": "https://github.com/Wing-summer/WingAsm"
 }

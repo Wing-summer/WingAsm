@@ -32,7 +32,6 @@ public:
     virtual ~WingHexAsm();
 
 public:
-    virtual int sdkVersion() const override;
     virtual bool init(const std::unique_ptr<QSettings> &set) override;
     virtual void unload(std::unique_ptr<QSettings> &set) override;
     virtual const QString pluginName() const override;
@@ -46,21 +45,21 @@ public:
     virtual QList<WingHex::WingDockWidgetInfo>
     registeredDockWidgets() const override;
     virtual QMenu *registeredHexContextMenu() const override;
-    virtual QHash<WingHex::SettingPage *, bool>
+    virtual QList<WingHex::SettingPage *>
     registeredSettingPages() const override;
 
-    virtual QHash<QString, ScriptFnInfo> registeredScriptFns() const override;
-    virtual QHash<QString, QList<QPair<QString, int>>>
-    registeredScriptEnums() const override;
+    virtual void onRegisterScriptObj(WingHex::IWingAngel *o) override;
 
 private:
     void initDockWidgets();
 
 private:
-    WING_SERVICE QPair<QByteArray, int> doAsm(const QString &code, int arch,
-                                              int format);
-    WING_SERVICE QPair<QString, int> doDisasm(const QByteArray &code, int arch,
-                                              int format);
+    WING_SERVICE QByteArray doAsm(const WingHex::SenderInfo &sender,
+                                  const QString &code, int arch, int format);
+    WING_SERVICE QString doDisasm(const WingHex::SenderInfo &sender,
+                                  const QByteArray &code, int arch, int format);
+    WING_SERVICE int getLastAsmError(const WingHex::SenderInfo &sender);
+    WING_SERVICE int getLastDisasmError(const WingHex::SenderInfo &sender);
 
 private:
     QVariant doAsm(const QVariantList &params);
@@ -73,13 +72,13 @@ private slots:
 
 private:
     QList<WingHex::WingDockWidgetInfo> _dwinfos;
-    QHash<WingHex::SettingPage *, bool> _spinfos;
-
-    QHash<QString, WingHex::IWingPlugin::ScriptFnInfo> _scriptInfo;
-    QHash<QString, QList<QPair<QString, int>>> _scriptEnums;
+    QList<WingHex::SettingPage *> _spinfos;
 
     AsmWindow *_asmWin;
     AsmWindow *_disasmWin;
+
+    QHash<QString, WingEngine::ErrorKSEngine> _lastKSErr;
+    QHash<QString, WingEngine::ErrorCSEngine> _lastCSErr;
 
     QPixmap _pixicon;
 };

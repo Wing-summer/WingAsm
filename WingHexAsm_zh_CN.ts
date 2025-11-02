@@ -22,54 +22,55 @@
 <context>
     <name>WingHexAsm</name>
     <message>
-        <location filename="src/winghexasm.cpp" line="125"/>
+        <location filename="src/winghexasm.cpp" line="65"/>
         <source>WingHexAsm</source>
         <translation>羽云汇编器</translation>
     </message>
     <message>
-        <location filename="src/winghexasm.cpp" line="132"/>
+        <location filename="src/winghexasm.cpp" line="72"/>
         <source>Assembler/Disassembler plugin for WingHexExplorer2</source>
         <translation>一个具有汇编和反汇编功能的羽云十六进制编辑器2插件</translation>
     </message>
     <message>
-        <location filename="src/winghexasm.cpp" line="167"/>
+        <location filename="src/winghexasm.cpp" line="133"/>
         <source>WingAsm</source>
         <translation>羽云汇编器</translation>
     </message>
     <message>
-        <location filename="src/winghexasm.cpp" line="176"/>
+        <location filename="src/winghexasm.cpp" line="142"/>
         <source>WingDisAsm</source>
         <translation>羽云反汇编器</translation>
     </message>
     <message>
-        <location filename="src/winghexasm.cpp" line="263"/>
+        <location filename="src/winghexasm.cpp" line="241"/>
         <source>NoInput</source>
         <translation>无输入故无法继续的操作</translation>
     </message>
     <message>
-        <location filename="src/winghexasm.cpp" line="268"/>
-        <location filename="src/winghexasm.cpp" line="304"/>
+        <location filename="src/winghexasm.cpp" line="246"/>
+        <location filename="src/winghexasm.cpp" line="290"/>
         <source>NoCurrentFileEditing</source>
         <translation>无当前文档可编辑</translation>
     </message>
     <message>
-        <location filename="src/winghexasm.cpp" line="284"/>
-        <location filename="src/winghexasm.cpp" line="289"/>
+        <location filename="src/winghexasm.cpp" line="262"/>
+        <location filename="src/winghexasm.cpp" line="269"/>
+        <location filename="src/winghexasm.cpp" line="274"/>
         <source>AsmWriteFailed</source>
         <translation>汇编写入失败</translation>
     </message>
     <message>
-        <location filename="src/winghexasm.cpp" line="295"/>
+        <location filename="src/winghexasm.cpp" line="281"/>
         <source>AsmErrorSeeLog</source>
         <translation>汇编失败，请查看日志</translation>
     </message>
     <message>
-        <location filename="src/winghexasm.cpp" line="310"/>
+        <location filename="src/winghexasm.cpp" line="296"/>
         <source>OnlyOneSelSupport</source>
         <translation>只支持单选区</translation>
     </message>
     <message>
-        <location filename="src/winghexasm.cpp" line="326"/>
+        <location filename="src/winghexasm.cpp" line="312"/>
         <source>DisAsmErrorSeeLog</source>
         <translation>反汇编失败，请查看日志</translation>
     </message>
