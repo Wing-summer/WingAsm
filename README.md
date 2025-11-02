@@ -29,16 +29,23 @@
 3. 目前该插件语言仅支持简体中文和繁体中文（繁体中文使用工具转化），如果支持其他语言可 PR 。
 4. 如果该插件不支持一些架构，但`keystone`和`capstone`里面有，欢迎 PR 。
 
-&emsp;&emsp;该插件提供了两个服务：
+&emsp;&emsp;该插件提供的服务：
 
 ```cpp
-WING_SERVICE QPair<QByteArray, int> doAsm(const QString &code, int arch,
-                                          int format);
-WING_SERVICE QPair<QString, int> doDisasm(const QByteArray &code, int arch,
-                                          int format);
+WING_SERVICE QByteArray doAsm(const WingHex::SenderInfo &sender,
+                              const QString &code, int arch, int format);
+WING_SERVICE QString doDisasm(const WingHex::SenderInfo &sender,
+                              const QByteArray &code, int arch, int format);
 ```
 
 &emsp;&emsp;前者是汇编函数，后者是反汇编函数。`arch`和`format`是两类枚举；`doAsm`的`arch`和`doDisasm`的`arch`分别对应`WingEngine::KSArch`和`WingEngine::CSArch`。`format`对应`WingEngine::AsmFormat`。如果你实在记不住枚举值，你可以拷贝里面的内容，注意保持和插件版本一致。
+
+```cpp
+WING_SERVICE int getLastAsmError(const WingHex::SenderInfo &sender);
+WING_SERVICE int getLastDisasmError(const WingHex::SenderInfo &sender);
+```
+
+&emsp;&emsp;这两个函数是获取执行`doAsm`和`doDisasm`这两个函数最后的错误返回值，这两个函数比较特殊，不同插件的最后调用结果不会互相影响。
 
 &emsp;&emsp;与此同时，插件也提供了脚本服务：
 
