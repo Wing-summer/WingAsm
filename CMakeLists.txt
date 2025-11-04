@@ -64,7 +64,6 @@ add_plugin_translations_resource(QM_RES WingHexAsm ${QM_FILES})
 
 add_library(
     WingHexAsm SHARED
-    ${WINGHEX_SDK_HEADER}
     ${QM_FILES}
     ${QM_RES}
     src/winghexasm.cpp
