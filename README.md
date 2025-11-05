@@ -1,18 +1,18 @@
 <h1 align="center">WingHexExplorer2.WingAsm</h1>
 
 <p align="center">
-<img alt="WingHexPy" src="images/icon.png">
+<img alt="WingAsm" src="images/icon.png">
 <p align="center">WingAsm</p>
 </p>
 
 <p align="center">
-<img alt="作者" src="https://img.shields.io/badge/Author-Wingsummer-green">
-<img alt="开源协议" src="https://img.shields.io/badge/License-AGPL--3.0-red">
+<img alt="作者" src="authorband.svg">
+<img alt="开源协议" src="licenseband.svg">
 </p>
 
 - 开源不易，给个 Star 或者 [捐助](#捐助) 吧
 
-## WingHexDisasm
+## WingHexAsm
 
 &emsp;&emsp;`WingHexAsm`是一个羽云十六进制编辑器插件，它具有汇编和反汇编的能力，基于`keystone`和`capstone`引擎框架。
 
