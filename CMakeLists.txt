@@ -21,7 +21,7 @@ if(MSVC)
     string(APPEND CMAKE_C_FLAGS " /utf-8")
 endif()
 
-option(TEST_MODE OFF)
+option(WINGHEX_TEST_MODE OFF)
 
 add_subdirectory(WingPlugin)
 
@@ -82,7 +82,7 @@ add_library(
 
 set_target_properties(WingHexAsm PROPERTIES SUFFIX ".wingplg")
 
-if(TEST_MODE)
+if(WINGHEX_TEST_MODE)
     if(NOT EXISTS "${WINGHEX_PATH}")
         message(
             FATAL_ERROR "Please config the WingHexExplorer2 Path - WINGHEX_PATH"
