@@ -4,19 +4,24 @@
 <context>
     <name>AsmWindow</name>
     <message>
-        <location filename="src/asmwindow.ui" line="34"/>
+        <location filename="src/asmwindow.ui" line="31"/>
         <source>Arch</source>
         <translation>架构</translation>
     </message>
     <message>
-        <location filename="src/asmwindow.ui" line="51"/>
+        <location filename="src/asmwindow.ui" line="48"/>
         <source>Style</source>
         <translation>样式</translation>
     </message>
     <message>
-        <location filename="src/asmwindow.ui" line="79"/>
+        <location filename="src/asmwindow.ui" line="78"/>
         <source>Process</source>
         <translation>处理</translation>
+    </message>
+    <message>
+        <location filename="src/asmwindow.ui" line="91"/>
+        <source>Clear</source>
+        <translation>清空</translation>
     </message>
 </context>
 <context>
